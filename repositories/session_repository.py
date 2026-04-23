@@ -25,3 +25,14 @@ class SessionRepository:
         WHERE session_id=%s
         """
         DBManager.execute_write(query, (reason, session_id))
+
+    @staticmethod
+    def find_active_by_gambler(gambler_id):
+        query = """
+        SELECT *
+        FROM session
+        WHERE gambler_id = %s
+        AND status = 'ACTIVE'
+        LIMIT 1 
+        """
+        DBManager.fetch_one(query, (gambler_id,))

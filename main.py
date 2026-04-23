@@ -4,7 +4,7 @@ from services.stake_management_service import StakeManagementService
 from services.betting_service import BettingService
 from services.session_service import SessionService
 from strategies import FixedAmountStrategy, PercentageStrategy, MartingaleStrategy, FibonacciStrategy
-
+from models.session_parameters import SessionParameters
 def test_connection():
     result = DBManager.fetch_one("SELECT DATABASE() as db")
     print("Connected to:", result["db"])
@@ -42,12 +42,22 @@ def test_betting(gambler_id):
         result, balance = BettingService.place_bet(gambler_id, 100)
         print(f"Bet {i + 1}: {result}, Balance: {balance}")
 
+params = SessionParameters(
+    win_threshold=2000,
+    loss_threshold=500,
+    min_bet=50,
+    max_bet=500,
+    max_games=10,
+    max_duration=30,
+    win_probability=None
+)
+
 def test_session_flow():
     gambler = testGambler()
     session = SessionService.start_session(gambler.gambler_id)
     print("Session started")
     strategy = FixedAmountStrategy(100)
-    SessionService.play_session(session, strategy)
+    SessionService.play_session(session, strategy, params=params)
 
 
 if __name__ == "__main__":
