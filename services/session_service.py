@@ -5,6 +5,7 @@ from services.betting_service import BettingService
 from models.stake_boundary import StakeBoundary
 from models.session_statistics import SessionStatistics
 from services.stake_management_service import StakeManagementService
+from strategies import base_strategy, fixed_strategy, martingale_strategy, percentage_strategy
 
 
 class SessionService:
@@ -23,7 +24,7 @@ class SessionService:
     
 
     @staticmethod
-    def play_session(session, bet_amount):
+    def play_session(session, strategy):
         gambler = GamblerRepository.find_by_id(session.gambler_id)
 
         boundary = StakeBoundary(
@@ -33,18 +34,27 @@ class SessionService:
 
         stats = SessionStatistics()
 
+        print(f"\nSTRATEGY: {strategy.__class__.__name__}")
+
         while session.status == "ACTIVE":
+
+            amount = strategy.next_bet(gambler)
+            amount = min(amount, gambler.current_balance)
             # PLACE BET
             result, balance = BettingService.place_bet(
                 gambler.gambler_id,
-                bet_amount,
-                session.session_id
+                amount,
+                session.session_id,
+                win_probability=None
             )
 
-            # UPDATE STATS
-            stats.record(result, bet_amount)
+            # UPDATE STRATEGY
+            strategy.record_result(result)
 
-            print(f"Result: {result}, Balance: {balance}")
+            # UPDATE STATS
+            stats.record(result, amount)
+
+            print(f"Bet: {amount} | Result: {result}, Balance: {balance}")
 
             # CHECK BOUNDARIES
             

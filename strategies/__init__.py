@@ -1,0 +1,4 @@
+from strategies.fixed_strategy import FixedAmountStrategy
+from strategies.percentage_strategy import PercentageStrategy
+from strategies.martingale_strategy import MartingaleStrategy
+from strategies.fibonacci_strategy import FibonacciStrategy

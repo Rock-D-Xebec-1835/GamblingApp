@@ -3,6 +3,7 @@ from services.gambler_service import GamblerService
 from services.stake_management_service import StakeManagementService
 from services.betting_service import BettingService
 from services.session_service import SessionService
+from strategies import FixedAmountStrategy, PercentageStrategy, MartingaleStrategy, FibonacciStrategy
 
 def test_connection():
     result = DBManager.fetch_one("SELECT DATABASE() as db")
@@ -45,7 +46,8 @@ def test_session_flow():
     gambler = testGambler()
     session = SessionService.start_session(gambler.gambler_id)
     print("Session started")
-    SessionService.play_session(session, 100)
+    strategy = FixedAmountStrategy(100)
+    SessionService.play_session(session, strategy)
 
 
 if __name__ == "__main__":
