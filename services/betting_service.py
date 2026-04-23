@@ -4,12 +4,22 @@ from repositories.bet_repository import BetRepository
 from models.transaction_type import TransactionType
 from models.stake_transaction import StakeTransaction
 from models.bet import Bet
+from strategies.outcome_strategy import RandomOutcomeStrategy, WeightedProbabilityStrategy
+from models.odds_config import OddsConfig
+from models.game_result import GameResult
 
 import random
 
 class BettingService:
     @staticmethod
-    def place_bet(gambler_id, amount, session_id=None, win_probability=None):
+    def american_to_decimal(odds):
+        if odds > 0:
+            return(odds / 100) + 1
+        else:
+            return(100 / abs(odds)) + 1
+
+    @staticmethod
+    def place_bet(gambler_id, amount, session_id=None, win_probability=None, odds_type="PROBABILITY", outcome_strategy=None):
         gambler = GamblerRepository.find_by_id(gambler_id)
 
         if amount > gambler.current_balance:
@@ -19,12 +29,18 @@ class BettingService:
         if(win_probability <= 0 or win_probability >= 1):
             raise ValueError("Win probability must be between 0 and 1")
 
-        win = random.random() < win_probability
+        if outcome_strategy is None:
+            outcome_strategy = RandomOutcomeStrategy(win_probability)
+        win = outcome_strategy.is_win()
 
-        odds = round(1 / win_probability,2)
+        odds_config = OddsConfig(odds_type)
+        odds = odds_config.calculate_odds(win_probability)
         stake_before = gambler.current_balance
         if win:
-            payout = round(amount * odds, 2)
+            decimal_odds = odds
+            if(odds_config.odds_type == "AMERICAN"):
+                decimal_odds = BettingService.american_to_decimal(odds)
+            payout = round(amount * decimal_odds, 2)
             gambler.current_balance += round(payout - amount,2)
             gambler.total_winnings += round(payout - amount,2)
             result="WIN"
@@ -66,7 +82,7 @@ class BettingService:
 
         GamblerRepository.update(gambler)
 
-        return result, gambler.current_balance
+        return GameResult(result, amount, odds, txn_amount, gambler.current_balance)
 
 
         

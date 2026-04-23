@@ -10,6 +10,7 @@ from models.session_parameters import SessionParameters
 import time
 import random
 from models.pause_record import PauseRecord
+from models.game_result import GameResult
 
 
 
@@ -103,12 +104,15 @@ class SessionService:
                 else random.uniform(0.3, 0.7)
             )
             # PLACE BET
-            result, balance = BettingService.place_bet(
+            game_result = BettingService.place_bet(
                 gambler.gambler_id,
                 amount,
                 session.session_id,
                 win_probability=win_probability
             )
+
+            result = game_result.result
+            balance = game_result.balance_after
 
             games_played += 1
 
