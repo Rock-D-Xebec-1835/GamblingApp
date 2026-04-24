@@ -7,6 +7,7 @@ from models.bet import Bet
 from strategies.outcome_strategy import RandomOutcomeStrategy, WeightedProbabilityStrategy
 from models.odds_config import OddsConfig
 from models.game_result import GameResult
+from services.input_validator import InputValidator
 
 import random
 
@@ -22,12 +23,10 @@ class BettingService:
     def place_bet(gambler_id, amount, session_id=None, win_probability=None, odds_type="PROBABILITY", outcome_strategy=None):
         gambler = GamblerRepository.find_by_id(gambler_id)
 
-        if amount > gambler.current_balance:
-            raise ValueError("Insufficient Balance")
+        InputValidator.validate_bet_amount(amount, gambler.current_balance)
         if(win_probability == None):
             win_probability = random.uniform(0.3,0.7)
-        if(win_probability <= 0 or win_probability >= 1):
-            raise ValueError("Win probability must be between 0 and 1")
+        InputValidator.validate_probability(win_probability)
 
         if outcome_strategy is None:
             outcome_strategy = RandomOutcomeStrategy(win_probability)

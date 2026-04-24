@@ -1,16 +1,13 @@
 from models.gambler import Gambler
 from repositories.gambler_repository import GamblerRepository
+from services.input_validator import InputValidator
 
 class GamblerService:
     MIN_STAKE = 100
     @staticmethod
     def create_gambler(name, initial_balance, win_threshold, loss_threshold):
-        if initial_balance < GamblerService.MIN_STAKE:
-            raise ValueError("Initial stake must be atleast " + GamblerService.MIN_STAKE)
-        if win_threshold <= initial_balance:
-            raise ValueError("Win threshold must be higher than " + initial_balance)
-        if loss_threshold >= initial_balance:
-            raise ValueError("Loss threshold must be less than " + initial_balance)
+        InputValidator.validate_initial_stake(GamblerService.MIN_STAKE)
+        InputValidator.validate_limits(win_threshold,loss_threshold)
         gambler = Gambler(
             name=name,
             initial_balance=initial_balance,
